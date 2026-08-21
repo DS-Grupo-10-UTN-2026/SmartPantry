@@ -11,7 +11,7 @@
 1. Crear un único Issue para el trabajo y agregarlo al Project de la organización.
 2. Actualizar `main` y crear desde allí la rama indicada por el TP.
 3. Realizar commits pequeños y descriptivos, vinculándolos con el Issue cuando corresponda; por ejemplo, `docs: adaptar archivos iniciales (#1)`.
-4. Abrir el PR contra `main`, completar la plantilla, incluir `Closes #N` y solicitar revisión a `@<organizacion>/reviewers`.
+4. Abrir el PR contra `main`, completar la plantilla, incluir `Closes #N` y solicitar revisión a `@DS-Grupo-10-UTN-2026/reviewers`.
 5. No hacer push directo a `main`, `stg` ni `prod`.
 6. Tras integrar capacidades aprobadas, abrir un PR de `main` a `stg`; para una entrega o defensa, abrir otro de `stg` a `prod`.
 
