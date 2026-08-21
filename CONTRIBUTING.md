@@ -16,4 +16,4 @@
 6. Tras integrar capacidades aprobadas, abrir un PR de `main` a `stg`; para una entrega o defensa, abrir otro de `stg` a `prod`.
 
 ## URL para crear un PR de funcionalidad
-`https://github.com/<organizacion>/<repositorio>/compare/main...feature/<numero-issue>-<descripcion-corta>?expand=1`
+`https://github.com/DS-Grupo-10-UTN-2026/SmartPantry/compare/main...feature/<numero-issue>-<descripcion-corta>?expand=1`
