@@ -443,5 +443,3 @@ src/SmartPantry.DbMigrator/Logs/*
 tempkey.rsa
 tempkey.jwk
 
-# Secrets locales (no versionar)
-appsettings.secrets.json
