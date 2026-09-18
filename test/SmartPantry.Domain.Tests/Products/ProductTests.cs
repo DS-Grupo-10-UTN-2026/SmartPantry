@@ -1,6 +1,5 @@
 ﻿using System;
 using Shouldly;
-using Volo.Abp;
 using Xunit;
 
 namespace SmartPantry.Products;
@@ -23,7 +22,7 @@ public class ProductTests : SmartPantryDomainTestBase<SmartPantryDomainTestModul
     [Fact]
     public void Should_Not_Create_A_Product_With_Empty_Barcode()
     {
-        Should.Throw<AbpException>(() =>
+        Should.Throw<ArgumentException>(() =>
         {
             new Product(Guid.NewGuid(), "   ", "Arroz largo fino 1kg");
         });
@@ -32,7 +31,7 @@ public class ProductTests : SmartPantryDomainTestBase<SmartPantryDomainTestModul
     [Fact]
     public void Should_Not_Create_A_Product_With_Empty_Name()
     {
-        Should.Throw<AbpException>(() =>
+        Should.Throw<ArgumentException>(() =>
         {
             new Product(Guid.NewGuid(), "7790001112223", "   ");
         });
