@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Threading.Tasks;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 
 namespace SmartPantry.Products;
 
-public interface IProductAppService : IApplicationService
+public interface IProductAppService : ICrudAppService<ProductDto, ProductDto, Guid, PagedAndSortedResultRequestDto, CreateProductDto, UpdateProductDto>
 {
-    Task<ProductDto> CreateAsync(CreateProductDto input);
-    Task<ProductDto> GetAsync(Guid id);
 }
