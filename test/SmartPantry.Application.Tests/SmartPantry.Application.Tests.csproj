@@ -1,27 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\common.props" />
+	<Import Project="..\..\common.props" />
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <RootNamespace>SmartPantry</RootNamespace>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<RootNamespace>SmartPantry</RootNamespace>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\SmartPantry.Application\SmartPantry.Application.csproj" />
-    <ProjectReference Include="..\..\src\SmartPantry.EntityFrameworkCore\SmartPantry.EntityFrameworkCore.csproj" />
-    <ProjectReference Include="..\SmartPantry.Domain.Tests\SmartPantry.Domain.Tests.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\SmartPantry.Application\SmartPantry.Application.csproj" />
+		<ProjectReference Include="..\..\src\SmartPantry.EntityFrameworkCore\SmartPantry.EntityFrameworkCore.csproj" />
+		<ProjectReference Include="..\..\src\SmartPantry.HttpApi.Host\SmartPantry.HttpApi.Host.csproj" />
+		<ProjectReference Include="..\SmartPantry.Domain.Tests\SmartPantry.Domain.Tests.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Update="xunit.runner.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Update="xunit.runner.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>
