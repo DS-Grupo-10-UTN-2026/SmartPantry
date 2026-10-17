@@ -15,6 +15,8 @@ using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.TenantManagement;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
 using SmartPantry.Products;
+using SmartPantry.PantryItems;
+using SmartPantry.ExpirationWarnings;
 
 namespace SmartPantry.EntityFrameworkCore;
 
@@ -28,7 +30,8 @@ public class SmartPantryDbContext :
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
     public DbSet<Product> Products { get; set; }
-
+    public DbSet<PantryItem> PantryItems { get; set; }
+    public DbSet<ExpirationWarning> ExpirationWarnings { get; set; }
     #region Entities from the modules
 
     /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
@@ -89,6 +92,23 @@ public class SmartPantryDbContext :
             b.Property(x => x.Barcode).IsRequired().HasMaxLength(ProductConsts.MaxBarcodeLength);
             b.Property(x => x.Name).IsRequired().HasMaxLength(ProductConsts.MaxNameLength);
             b.HasIndex(x => x.Barcode).IsUnique();
+        });
+
+        builder.Entity<PantryItem>(b =>
+        {
+            b.ToTable(SmartPantryConsts.DbTablePrefix + "PantryItems", SmartPantryConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.OwnerUserId).IsRequired();
+            b.Property(x => x.ProductId).IsRequired();
+            b.HasIndex(x => new { x.OwnerUserId, x.Status });
+        });
+
+        builder.Entity<ExpirationWarning>(b =>
+        {
+            b.ToTable(SmartPantryConsts.DbTablePrefix + "ExpirationWarnings", SmartPantryConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.LogicalKey).IsRequired().HasMaxLength(ExpirationWarningConsts.MaxLogicalKeyLength);
+            b.HasIndex(x => x.LogicalKey).IsUnique();
         });
     }
 }
