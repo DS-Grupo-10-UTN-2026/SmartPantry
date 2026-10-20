@@ -6,6 +6,7 @@ using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Data;
 using Volo.Abp.Modularity;
 using Volo.Abp.Threading;
+using Volo.Abp.BackgroundWorkers;
 
 namespace SmartPantry;
 
@@ -22,6 +23,11 @@ public class SmartPantryTestBaseModule : AbpModule
         Configure<AbpBackgroundJobOptions>(options =>
         {
             options.IsJobExecutionEnabled = false;
+        });
+
+        Configure<AbpBackgroundWorkerOptions>(options =>
+        {
+            options.IsEnabled = false;
         });
 
         context.Services.AddAlwaysAllowAuthorization();
