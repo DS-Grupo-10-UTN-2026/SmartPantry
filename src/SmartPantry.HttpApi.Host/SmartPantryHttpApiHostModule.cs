@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using OpenIddict.Validation.AspNetCore;
 using OpenIddict.Server.AspNetCore;
 using SmartPantry.EntityFrameworkCore;
+using SmartPantry.ExternalProducts; // TP07
 using SmartPantry.MultiTenancy;
 using SmartPantry.HealthChecks;
 using Microsoft.OpenApi;
@@ -103,7 +104,7 @@ public class SmartPantryHttpApiHostModule : AbpModule
             {
                 options.DisableTransportSecurityRequirement = true;
             });
-            
+
             Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
@@ -127,6 +128,18 @@ public class SmartPantryHttpApiHostModule : AbpModule
         ConfigureSwagger(context, configuration);
         ConfigureVirtualFileSystem(context);
         ConfigureCors(context, configuration);
+
+        // TP07: cliente HTTP de Open Food Facts administrado por IHttpClientFactory
+        context.Services.AddHttpClient<
+            IExternalProductCatalogClient,
+            OpenFoodFactsProductCatalogClient>(client =>
+            {
+                client.BaseAddress = new Uri("https://world.openfoodfacts.org/api/v3/");
+                client.Timeout = TimeSpan.FromSeconds(15);
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                    "SmartPantry/1.0 (+https://github.com/DS-Grupo-10-UTN-2026/SmartPantry)");
+                client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+            });
     }
 
     private void ConfigureStudio(IHostEnvironment hostingEnvironment)

@@ -36,4 +36,37 @@ public class ProductTests : SmartPantryDomainTestBase<SmartPantryDomainTestModul
             new Product(Guid.NewGuid(), "7790001112223", "   ");
         });
     }
+    [Fact]
+    public void SetName_Con_Nombre_Valido_Lo_Normaliza()
+    {
+        var product = new Product(Guid.NewGuid(), "7790001", "Leche");
+
+        product.SetName("  Leche entera  ");
+
+        product.Name.ShouldBe("Leche entera");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void SetName_Con_Nombre_Invalido_Lanza_Y_Conserva_El_Estado(string? invalido)
+    {
+        var product = new Product(Guid.NewGuid(), "7790001", "Leche");
+
+        Should.Throw<ArgumentException>(() => product.SetName(invalido!));
+
+        product.Name.ShouldBe("Leche");
+    }
+
+    [Fact]
+    public void SetName_Demasiado_Largo_Lanza_Y_Conserva_El_Estado()
+    {
+        var product = new Product(Guid.NewGuid(), "7790001", "Leche");
+        var largo = new string('a', ProductConsts.MaxNameLength + 1);
+
+        Should.Throw<ArgumentException>(() => product.SetName(largo));
+
+        product.Name.ShouldBe("Leche");
+    }
 }

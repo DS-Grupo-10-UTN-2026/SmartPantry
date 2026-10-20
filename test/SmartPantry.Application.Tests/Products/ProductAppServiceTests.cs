@@ -5,6 +5,7 @@ using Shouldly;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Validation;
+using Volo.Abp.Application.Dtos;
 using Xunit;
 
 namespace SmartPantry.Products;
@@ -77,5 +78,56 @@ public class ProductAppServiceTests : SmartPantryApplicationTestBase<SmartPantry
                 Name = "Producto sin barcode"
             });
         });
+    }
+    [Fact]
+    public async Task Should_Register_List_Update_Get_And_Delete_A_Product()
+    {
+        var created = await _productAppService.CreateAsync(new CreateProductDto
+        {
+            Barcode = "7790999000111",
+            Name = "Yerba"
+        });
+        created.Id.ShouldNotBe(Guid.Empty);
+
+        var list = await _productAppService.GetListAsync(new PagedAndSortedResultRequestDto
+        {
+            MaxResultCount = 10
+        });
+        list.Items.ShouldContain(p => p.Id == created.Id);
+
+        var updated = await _productAppService.UpdateAsync(created.Id, new UpdateProductDto
+        {
+            Name = "  Yerba mate  "
+        });
+        updated.Name.ShouldBe("Yerba mate");
+
+        var fetched = await _productAppService.GetAsync(created.Id);
+        fetched.Name.ShouldBe("Yerba mate");
+        fetched.Barcode.ShouldBe("7790999000111");
+
+        await _productAppService.DeleteAsync(created.Id);
+
+        await Should.ThrowAsync<EntityNotFoundException>(async () =>
+        {
+            await _productAppService.GetAsync(created.Id);
+        });
+    }
+
+    [Fact]
+    public async Task Should_Not_Update_A_Product_With_An_Invalid_Name()
+    {
+        var created = await _productAppService.CreateAsync(new CreateProductDto
+        {
+            Barcode = "7790999000222",
+            Name = "Azúcar"
+        });
+
+        await Should.ThrowAsync<AbpValidationException>(async () =>
+        {
+            await _productAppService.UpdateAsync(created.Id, new UpdateProductDto { Name = "" });
+        });
+
+        var fetched = await _productAppService.GetAsync(created.Id);
+        fetched.Name.ShouldBe("Azúcar");
     }
 }
