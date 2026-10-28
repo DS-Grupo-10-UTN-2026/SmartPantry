@@ -1,8 +1,10 @@
 ﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using SmartPantry.ExternalProducts;
 
 namespace SmartPantry.ExternalProducts;
 
+[Authorize]
 public class ProductLookupAppService : SmartPantryAppService, IProductLookupAppService
 {
     private readonly IExternalProductCatalogClient _catalogClient;
