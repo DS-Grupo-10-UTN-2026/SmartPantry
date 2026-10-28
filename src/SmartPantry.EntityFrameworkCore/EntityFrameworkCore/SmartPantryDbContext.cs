@@ -100,6 +100,8 @@ public class SmartPantryDbContext :
             b.ConfigureByConvention();
             b.Property(x => x.OwnerUserId).IsRequired();
             b.Property(x => x.ProductId).IsRequired();
+            b.Property(x => x.Quantity).HasPrecision(18, 3);
+            b.Property(x => x.Unit).HasMaxLength(PantryItemConsts.MaxUnitLength);
             b.HasIndex(x => new { x.OwnerUserId, x.Status });
         });
 
