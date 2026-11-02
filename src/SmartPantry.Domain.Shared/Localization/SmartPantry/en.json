@@ -34,6 +34,9 @@
     "Pantry:Updated": "Item updated.",
     "Pantry:ConsumedMessage": "Item marked as consumed.",
     "Pantry:Deleted": "Item deleted.",
-    "Pantry:ActionError": "The operation could not be completed."
+    "Pantry:ActionError": "The operation could not be completed.",
+    "Pantry:Previous": "Previous",
+    "Pantry:Next": "Next",
+    "Pantry:PageOf": "Page {0} of {1}"
   }
 }
