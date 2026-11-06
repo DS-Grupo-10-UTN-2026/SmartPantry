@@ -16,6 +16,69 @@
   </div>
 
   <div class="card-body">
+    @if (editing(); as item) {
+    <form class="border rounded p-3 mb-4" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <h6 class="mb-3">
+        {{ '::Pantry:EditItem' | abpLocalization }}:
+        {{ item.productName ?? ('::Pantry:NoData' | abpLocalization) }}
+      </h6>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label" for="edit-expiration-date">
+            {{ '::Pantry:ExpirationDate' | abpLocalization }}
+          </label>
+          <input id="edit-expiration-date"
+                 type="date"
+                 class="form-control"
+                 formControlName="expirationDate" />
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label" for="edit-quantity">
+            {{ '::Pantry:Quantity' | abpLocalization }}
+          </label>
+          <input id="edit-quantity"
+                 type="number"
+                 step="any"
+                 class="form-control"
+                 [class.is-invalid]="form.controls.quantity.invalid"
+                 formControlName="quantity" />
+          @if (form.controls.quantity.errors?.['min']) {
+          <div class="invalid-feedback">
+            {{ '::Pantry:Validation:QuantityMin' | abpLocalization }}
+          </div>
+          }
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label" for="edit-unit">
+            {{ '::Pantry:Unit' | abpLocalization }}
+          </label>
+          <input id="edit-unit"
+                 type="text"
+                 class="form-control"
+                 [class.is-invalid]="form.controls.unit.invalid"
+                 formControlName="unit" />
+          @if (form.controls.unit.errors?.['maxlength']) {
+          <div class="invalid-feedback">
+            {{ '::Pantry:Validation:UnitMaxLength' | abpLocalization: unitMaxLength.toString() }}
+          </div>
+          }
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <button type="submit" class="btn btn-primary btn-sm" [disabled]="form.invalid || saving()">
+          {{ '::Pantry:Save' | abpLocalization }}
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm ms-2" (click)="cancelEdit()">
+          {{ '::Pantry:Cancel' | abpLocalization }}
+        </button>
+      </div>
+    </form>
+    }
+
     @if (loading()) {
     <div class="d-flex align-items-center gap-2" role="status">
       <div class="spinner-border spinner-border-sm" aria-hidden="true"></div>
@@ -56,6 +119,7 @@
               </button>
             </th>
             <th scope="col">{{ '::Pantry:Status' | abpLocalization }}</th>
+            <th scope="col">{{ '::Pantry:Actions' | abpLocalization }}</th>
           </tr>
         </thead>
         <tbody>
@@ -77,6 +141,28 @@
                     [class.bg-secondary]="item.status === PantryItemStatus.Consumed">
                 {{ statusKey(item) | abpLocalization }}
               </span>
+            </td>
+            <td class="text-nowrap">
+              @if (item.status === PantryItemStatus.Active) {
+              <button type="button"
+                      class="btn btn-sm btn-outline-primary me-1"
+                      [disabled]="busyId() !== null"
+                      (click)="startEdit(item)">
+                {{ '::Pantry:Edit' | abpLocalization }}
+              </button>
+              <button type="button"
+                      class="btn btn-sm btn-outline-success me-1"
+                      [disabled]="busyId() !== null"
+                      (click)="markAsConsumed(item)">
+                {{ '::Pantry:MarkAsConsumed' | abpLocalization }}
+              </button>
+              }
+              <button type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      [disabled]="busyId() !== null"
+                      (click)="deleteItem(item)">
+                {{ '::Pantry:Delete' | abpLocalization }}
+              </button>
             </td>
           </tr>
           }
@@ -106,4 +192,5 @@
     </div>
     }
     }
-
+  </div>
+</div>
