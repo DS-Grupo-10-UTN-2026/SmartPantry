@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { LocalizationPipe, LocalizationService } from '@abp/ng.core';
+import { ListService, LocalizationPipe, LocalizationService } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
-import { Subject, catchError, finalize, of, switchMap, tap } from 'rxjs';
+import { EMPTY, catchError, finalize } from 'rxjs';
 import { PantryItemDto, PantryItemService, PantryItemStatus } from '../proxy/pantry-items';
 
 type SortField = 'ExpirationDate' | 'ProductName' | 'Quantity' | 'Unit';
@@ -17,14 +17,15 @@ const UNIT_MAX_LENGTH = 20;
   templateUrl: './pantry.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe, LocalizationPipe, ReactiveFormsModule],
+  providers: [ListService],
 })
 export class PantryComponent {
   private readonly pantryItemService = inject(PantryItemService);
+  private readonly list = inject(ListService);
   private readonly confirmation = inject(ConfirmationService);
   private readonly toaster = inject(ToasterService);
   private readonly localization = inject(LocalizationService);
   private readonly fb = inject(FormBuilder);
-  private readonly request$ = new Subject<void>();
 
   readonly pageSize = 10;
   readonly unitMaxLength = UNIT_MAX_LENGTH;
@@ -52,56 +53,47 @@ export class PantryComponent {
   });
 
   constructor() {
-    this.request$
-      .pipe(
-        tap(() => {
-          this.loading.set(true);
-          this.failed.set(false);
-        }),
-        switchMap(() =>
-          this.pantryItemService
-            .getList({
-              includeConsumed: this.includeConsumed(),
-              sorting: `${this.sortField()} ${this.sortDescending() ? 'desc' : 'asc'}`,
-              skipCount: (this.page() - 1) * this.pageSize,
-              maxResultCount: this.pageSize,
-            })
-            .pipe(catchError(() => of(null))),
-        ),
-        takeUntilDestroyed(),
-      )
+    // ListService arma la consulta (página, orden y cantidad); el componente aporta el resto.
+    this.list.maxResultCount = this.pageSize;
+    this.list.sortKey = this.sortField();
+    this.list.sortOrder = 'asc';
+
+    this.list
+      .hookToQuery(query => this.fetch(query))
+      .pipe(takeUntilDestroyed())
       .subscribe(result => {
-        this.loading.set(false);
-        if (!result) {
-          this.failed.set(true);
-          return;
-        }
         this.items.set(result.items ?? []);
         this.totalCount.set(result.totalCount ?? 0);
+        this.loading.set(false);
       });
-
-    this.load();
   }
 
+  // Vuelve a ejecutar la consulta actual (se usa para reintentar y después de cada acción).
   load(): void {
-    this.request$.next();
+    this.list.get();
   }
 
   sortBy(field: SortField): void {
-    if (this.sortField() === field) {
-      this.sortDescending.update(descending => !descending);
-    } else {
-      this.sortField.set(field);
-      this.sortDescending.set(false);
-    }
+    const descending = this.sortField() === field ? !this.sortDescending() : false;
+    this.sortField.set(field);
+    this.sortDescending.set(descending);
     this.page.set(1);
-    this.load();
+
+    // Cada asignación pide una consulta, pero ListService espera y se queda con la última.
+    this.list.page = 0;
+    this.list.sortKey = field;
+    this.list.sortOrder = descending ? 'desc' : 'asc';
   }
 
   onIncludeConsumedChange(event: Event): void {
     this.includeConsumed.set((event.target as HTMLInputElement).checked);
     this.page.set(1);
-    this.load();
+
+    if (this.list.page !== 0) {
+      this.list.page = 0;
+    } else {
+      this.list.get();
+    }
   }
 
   goToPage(page: number): void {
@@ -109,7 +101,7 @@ export class PantryComponent {
       return;
     }
     this.page.set(page);
-    this.load();
+    this.list.page = page - 1;
   }
 
   // ---- Editar ----
@@ -172,11 +164,8 @@ export class PantryComponent {
       .subscribe({
         next: () => {
           this.closeEditorIfEditing(item);
-          if (!this.includeConsumed()) {
-            this.stepBackIfLastOnPage();
-          }
           this.toaster.success('::Pantry:ConsumedMessage');
-          this.load();
+          this.reload(!this.includeConsumed());
         },
         error: () => {
           this.toaster.error('::Pantry:ActionError');
@@ -210,9 +199,8 @@ export class PantryComponent {
           .subscribe({
             next: () => {
               this.closeEditorIfEditing(item);
-              this.stepBackIfLastOnPage();
               this.toaster.success('::Pantry:Deleted');
-              this.load();
+              this.reload(true);
             },
             error: () => {
               this.toaster.error('::Pantry:ActionError');
@@ -244,6 +232,27 @@ export class PantryComponent {
     return this.sortDescending() ? 'descending' : 'ascending';
   }
 
+  private fetch(query: { skipCount: number; maxResultCount: number; sorting?: string }) {
+    this.loading.set(true);
+    this.failed.set(false);
+
+    return this.pantryItemService
+      .getList({
+        includeConsumed: this.includeConsumed(),
+        sorting: query.sorting,
+        skipCount: query.skipCount,
+        maxResultCount: query.maxResultCount,
+      })
+      .pipe(
+        // El error se informa en la pantalla (con Reintentar) y no corta el flujo de ListService.
+        catchError(() => {
+          this.failed.set(true);
+          this.loading.set(false);
+          return EMPTY;
+        }),
+      );
+  }
+
   private closeEditorIfEditing(item: PantryItemDto): void {
     if (this.editing()?.id === item.id) {
       this.editing.set(null);
@@ -251,9 +260,11 @@ export class PantryComponent {
   }
 
   // Si se quita el último ítem de una página que no es la primera, vuelve a la anterior.
-  private stepBackIfLastOnPage(): void {
-    if (this.items().length === 1 && this.page() > 1) {
-      this.page.update(page => page - 1);
+  private reload(stepBackIfLastOnPage: boolean): void {
+    if (stepBackIfLastOnPage && this.items().length === 1 && this.page() > 1) {
+      this.goToPage(this.page() - 1);
+      return;
     }
+    this.load();
   }
 }

@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { LocalizationService } from '@abp/ng.core';
+import { LIST_QUERY_DEBOUNCE_TIME, LocalizationService } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
 import { Subject, of, throwError } from 'rxjs';
 import { PantryComponent } from './pantry.component';
@@ -75,6 +75,7 @@ describe('PantryComponent', () => {
         { provide: ConfirmationService, useValue: confirmationService },
         { provide: ToasterService, useValue: toasterService },
         { provide: LocalizationService, useValue: { instant: (key: string) => key } },
+        { provide: LIST_QUERY_DEBOUNCE_TIME, useValue: 0 },
       ],
     }).compileComponents();
   });
@@ -88,6 +89,7 @@ describe('PantryComponent', () => {
 
     expect(text()).toContain('::Pantry:Loading');
     expect(element().querySelector('table')).toBeNull();
+    expect(text()).not.toContain('::Pantry:Empty');
   });
 
   it('muestra el error con un botón para reintentar', () => {
