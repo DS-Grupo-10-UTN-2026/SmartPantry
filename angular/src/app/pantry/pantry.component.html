@@ -28,10 +28,20 @@
           <label class="form-label" for="edit-expiration-date">
             {{ '::Pantry:ExpirationDate' | abpLocalization }}
           </label>
-          <input id="edit-expiration-date"
+          <input #expirationDateInput
+                 id="edit-expiration-date"
                  type="date"
                  class="form-control"
-                 formControlName="expirationDate" />
+                 [class.is-invalid]="form.controls.expirationDate.invalid || dateIncomplete()"
+                 formControlName="expirationDate"
+                 (input)="onExpirationDateInput($event)"
+                 (change)="onExpirationDateInput($event)"
+                 (blur)="onExpirationDateInput($event)" />
+          @if (form.controls.expirationDate.errors?.['invalidDate'] || dateIncomplete()) {
+          <div class="invalid-feedback">
+            {{ '::Pantry:Validation:ExpirationDateInvalid' | abpLocalization }}
+          </div>
+          }
         </div>
 
         <div class="col-md-4">
@@ -69,7 +79,7 @@
       </div>
 
       <div class="mt-3">
-        <button type="submit" class="btn btn-primary btn-sm" [disabled]="form.invalid || saving()">
+        <button type="submit" class="btn btn-primary btn-sm" [disabled]="form.invalid || dateIncomplete() || saving()">
           {{ '::Pantry:Save' | abpLocalization }}
         </button>
         <button type="button" class="btn btn-secondary btn-sm ms-2" (click)="cancelEdit()">

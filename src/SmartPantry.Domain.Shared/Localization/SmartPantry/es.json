@@ -64,6 +64,7 @@
     "Pantry:DeleteConfirmation": "¿Está seguro de que desea eliminar \"{0}\" de su despensa?",
     "Pantry:Validation:QuantityMin": "La cantidad no puede ser negativa.",
     "Pantry:Validation:UnitMaxLength": "La unidad no puede superar los {0} caracteres.",
+    "Pantry:Validation:ExpirationDateInvalid": "Ingrese una fecha de vencimiento válida.",
     "Pantry:Updated": "Ítem actualizado.",
     "Pantry:ConsumedMessage": "Ítem marcado como consumido.",
     "Pantry:Deleted": "Ítem eliminado.",

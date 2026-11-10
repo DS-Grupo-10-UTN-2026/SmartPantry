@@ -1,6 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ListService, LocalizationPipe, LocalizationService } from '@abp/ng.core';
 import { Confirmation, ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
@@ -11,6 +17,31 @@ type SortField = 'ExpirationDate' | 'ProductName' | 'Quantity' | 'Unit';
 
 // Espeja PantryItemConsts.MaxUnitLength del backend; el servidor sigue siendo quien valida.
 const UNIT_MAX_LENGTH = 20;
+const MIN_EXPIRATION_YEAR = 1900;
+const MAX_EXPIRATION_YEAR = 2100;
+
+// Fecha vacía = sin fecha. Si hay valor, debe ser una fecha real AAAA-MM-DD con un año razonable.
+function expirationDateValidator(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as string | null;
+  if (!value) {
+    return null;
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
+    return { invalidDate: true };
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  const isRealDate =
+    date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  const inRange = year >= MIN_EXPIRATION_YEAR && year <= MAX_EXPIRATION_YEAR;
+
+  return isRealDate && inRange ? null : { invalidDate: true };
+}
 
 @Component({
   selector: 'app-pantry',
@@ -43,11 +74,15 @@ export class PantryComponent {
   readonly editing = signal<PantryItemDto | null>(null);
   readonly saving = signal(false);
   readonly busyId = signal<string | null>(null);
+  // El campo de fecha nativo entrega texto vacío mientras la fecha está incompleta.
+  readonly dateIncomplete = signal(false);
+
+  private readonly expirationDateInput = viewChild<ElementRef<HTMLInputElement>>('expirationDateInput');
 
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
 
   readonly form = this.fb.group({
-    expirationDate: this.fb.control(''),
+    expirationDate: this.fb.control('', [expirationDateValidator]),
     quantity: this.fb.control<number | null>(null, [Validators.min(0)]),
     unit: this.fb.control('', [Validators.maxLength(UNIT_MAX_LENGTH)]),
   });
@@ -108,6 +143,7 @@ export class PantryComponent {
 
   startEdit(item: PantryItemDto): void {
     this.editing.set(item);
+    this.dateIncomplete.set(false);
     this.form.reset({
       expirationDate: item.expirationDate ?? '',
       quantity: item.quantity ?? null,
@@ -117,12 +153,27 @@ export class PantryComponent {
 
   cancelEdit(): void {
     this.editing.set(null);
+    this.dateIncomplete.set(false);
+  }
+
+  onExpirationDateInput(event: Event): void {
+    this.dateIncomplete.set((event.target as HTMLInputElement).validity.badInput);
   }
 
   save(): void {
     const item = this.editing();
     const id = item?.id;
-    if (!item || !id || this.form.invalid || this.saving()) {
+    if (!item || !id || this.saving()) {
+      return;
+    }
+
+    // El campo date nativo entrega '' mientras la fecha está incompleta y no emite ningún evento
+    // al tipear solo una parte: se consulta su validez justo antes de guardar.
+    if (this.expirationDateInput()?.nativeElement.validity.badInput) {
+      this.dateIncomplete.set(true);
+    }
+
+    if (this.form.invalid || this.dateIncomplete()) {
       return;
     }
 

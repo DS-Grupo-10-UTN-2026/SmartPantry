@@ -31,6 +31,7 @@
     "Pantry:DeleteConfirmation": "Are you sure you want to delete \"{0}\" from your pantry?",
     "Pantry:Validation:QuantityMin": "The quantity cannot be negative.",
     "Pantry:Validation:UnitMaxLength": "The unit cannot exceed {0} characters.",
+    "Pantry:Validation:ExpirationDateInvalid": "Enter a valid expiration date.",
     "Pantry:Updated": "Item updated.",
     "Pantry:ConsumedMessage": "Item marked as consumed.",
     "Pantry:Deleted": "Item deleted.",

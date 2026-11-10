@@ -308,6 +308,63 @@ describe('PantryComponent', () => {
     expect(pantryService.update).not.toHaveBeenCalled();
   });
 
+  it('no guarda si la fecha de vencimiento no es válida y muestra el mensaje', () => {
+    create();
+    component.startEdit(item());
+
+    for (const invalid of ['2026-02-30', '2026-13-01', '275760-01-01', '1800-01-01']) {
+      component.form.controls.expirationDate.setValue(invalid);
+      fixture.detectChanges();
+      expect(component.form.controls.expirationDate.errors?.['invalidDate']).toBeTruthy();
+      expect(text()).toContain('::Pantry:Validation:ExpirationDateInvalid');
+      component.save();
+    }
+
+    expect(pantryService.update).not.toHaveBeenCalled();
+  });
+
+  it('acepta la fecha vacía (sin dato) y las fechas reales', () => {
+    create();
+    component.startEdit(item());
+
+    for (const valid of ['', '2026-12-31', '2028-02-29']) {
+      component.form.controls.expirationDate.setValue(valid);
+      expect(component.form.controls.expirationDate.errors).toBeNull();
+    }
+  });
+
+  it('no guarda mientras la fecha esté incompleta y guarda cuando se completa', () => {
+    create();
+    component.startEdit(item());
+
+    component.onExpirationDateInput({ target: { validity: { badInput: true } } } as unknown as Event);
+    fixture.detectChanges();
+    expect(text()).toContain('::Pantry:Validation:ExpirationDateInvalid');
+    component.save();
+    expect(pantryService.update).not.toHaveBeenCalled();
+
+    component.onExpirationDateInput({ target: { validity: { badInput: false } } } as unknown as Event);
+    component.save();
+    expect(pantryService.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('detecta la fecha incompleta al guardar aunque el campo no haya emitido ningún evento', () => {
+    create();
+    component.startEdit(item());
+    fixture.detectChanges();
+
+    // Chrome no emite eventos al tipear solo una parte de la fecha: se simula validity.badInput.
+    const input = element().querySelector<HTMLInputElement>('#edit-expiration-date')!;
+    Object.defineProperty(input, 'validity', { value: { badInput: true }, configurable: true });
+
+    component.save();
+    fixture.detectChanges();
+
+    expect(pantryService.update).not.toHaveBeenCalled();
+    expect(component.dateIncomplete()).toBe(true);
+    expect(text()).toContain('::Pantry:Validation:ExpirationDateInvalid');
+  });
+
   // ---- Marcar como consumido ----
 
   it('marca un ítem como consumido, avisa y recarga la lista', () => {
