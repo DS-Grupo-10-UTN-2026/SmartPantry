@@ -288,12 +288,16 @@ export class PantryComponent {
     this.failed.set(false);
 
     return this.pantryItemService
-      .getList({
-        includeConsumed: this.includeConsumed(),
-        sorting: query.sorting,
-        skipCount: query.skipCount,
-        maxResultCount: query.maxResultCount,
-      })
+      .getList(
+        {
+          includeConsumed: this.includeConsumed(),
+          sorting: query.sorting,
+          skipCount: query.skipCount,
+          maxResultCount: query.maxResultCount,
+        },
+        // El error se informa en la pantalla (con Reintentar): se evita el cuadro predeterminado de ABP.
+        { skipHandleError: true },
+      )
       .pipe(
         // El error se informa en la pantalla (con Reintentar) y no corta el flujo de ListService.
         catchError(() => {

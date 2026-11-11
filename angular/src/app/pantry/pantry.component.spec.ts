@@ -49,6 +49,10 @@ describe('PantryComponent', () => {
   const cells = (row: Element) =>
     Array.from(row.querySelectorAll('td')).map(cell => (cell.textContent ?? '').trim());
 
+  // getList se invoca con (entrada, { skipHandleError: true }); se compara la entrada.
+  const expectLastListCall = (input: unknown) =>
+    expect(pantryService.getList).toHaveBeenLastCalledWith(input, { skipHandleError: true });
+
   // Se crea el componente después de configurar las respuestas del servicio simulado.
   const create = () => {
     fixture = TestBed.createComponent(PantryComponent);
@@ -183,7 +187,7 @@ describe('PantryComponent', () => {
   it('no pide los consumidos por defecto y los pide al activar el interruptor', () => {
     create();
 
-    expect(pantryService.getList).toHaveBeenLastCalledWith(
+    expectLastListCall(
       expect.objectContaining({ includeConsumed: false, skipCount: 0, maxResultCount: 10 }),
     );
 
@@ -192,7 +196,7 @@ describe('PantryComponent', () => {
     toggle.dispatchEvent(new Event('change'));
     fixture.detectChanges();
 
-    expect(pantryService.getList).toHaveBeenLastCalledWith(
+    expectLastListCall(
       expect.objectContaining({ includeConsumed: true, skipCount: 0 }),
     );
   });
@@ -200,17 +204,17 @@ describe('PantryComponent', () => {
   it('ordena por vencimiento de forma ascendente y alterna al elegir la misma columna', () => {
     create();
 
-    expect(pantryService.getList).toHaveBeenLastCalledWith(
+    expectLastListCall(
       expect.objectContaining({ sorting: 'ExpirationDate asc' }),
     );
 
     component.sortBy('ProductName');
-    expect(pantryService.getList).toHaveBeenLastCalledWith(
+    expectLastListCall(
       expect.objectContaining({ sorting: 'ProductName asc', skipCount: 0 }),
     );
 
     component.sortBy('ProductName');
-    expect(pantryService.getList).toHaveBeenLastCalledWith(
+    expectLastListCall(
       expect.objectContaining({ sorting: 'ProductName desc' }),
     );
   });
@@ -223,7 +227,7 @@ describe('PantryComponent', () => {
     expect(component.totalPages()).toBe(3);
 
     component.goToPage(2);
-    expect(pantryService.getList).toHaveBeenLastCalledWith(
+    expectLastListCall(
       expect.objectContaining({ skipCount: 10, maxResultCount: 10 }),
     );
 

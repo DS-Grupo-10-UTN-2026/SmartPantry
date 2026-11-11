@@ -180,7 +180,7 @@ El listado es paginado, por eso se usa `ListService` de `@abp/ng.core` (provisto
 
 #### Manejo de errores
 
-- **Listado:** si la consulta falla, la pantalla muestra un mensaje comprensible con el botón **Reintentar**. No muestra códigos de estado ni detalles técnicos.
+- **Listado:** la consulta se invoca con `skipHandleError: true` porque el propio componente la maneja: si falla, la pantalla muestra un mensaje comprensible con el botón **Reintentar**, sin códigos de estado ni detalles técnicos, y se evita que ABP abra además su cuadro de error predeterminado.
 - **Acciones (editar, consumir y eliminar):** se invocan con `skipHandleError: true`. El motivo es evitar que el manejo predeterminado de ABP abra además un cuadro de error con detalles técnicos. El componente informa el resultado con un aviso localizado (éxito o "No se pudo completar la operación"), conserva lo que el usuario ingresó en el formulario y, si falla un consumo o una eliminación, vuelve a cargar la lista para mostrar el estado real.
 - **Validación:** la interfaz repite por usabilidad las reglas del servidor (cantidad no negativa, fecha válida y unidad de hasta 20 caracteres), pero el servidor sigue siendo quien valida.
 - **Sin sesión:** el acceso directo a `/pantry` redirige al login de ABP.
